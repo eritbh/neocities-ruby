@@ -16,6 +16,8 @@ module Neocities
     def initialize(opts={})
       @uri = URI.parse API_URI
       @http = HTTPClient.new force_basic_auth: true
+      @http.receive_timeout = 10
+      @http.send_timeout = 10
       @opts = opts
 
       unless opts[:api_key] || (opts[:sitename] && opts[:password])
@@ -59,8 +61,15 @@ module Neocities
         if dry_run
           return {result: 'success'}
         else
-          File.open(path.to_s) do |file|
-            post 'upload', rpath => file
+          retries = 0
+          begin
+            File.open(path.to_s) do |file|
+              post 'upload', rpath => file
+            end
+          rescue error
+            raise error if retries > 3
+            retries += 1
+            retry
           end
         end
       end
