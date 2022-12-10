@@ -57,7 +57,7 @@ module Neocities
       retries = 0
       begin
         res = upload_hash rpath, Digest::SHA1.file(path.to_s).hexdigest
-      rescue error
+      rescue => error
         raise error if retries > 3
         retries += 1
         retry
@@ -74,7 +74,7 @@ module Neocities
             File.open(path.to_s) do |file|
               post 'upload', rpath => file
             end
-          rescue error
+          rescue => error
             raise error if retries > 3
             retries += 1
             retry
