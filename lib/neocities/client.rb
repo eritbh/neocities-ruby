@@ -16,8 +16,8 @@ module Neocities
     def initialize(opts={})
       @uri = URI.parse API_URI
       @http = HTTPClient.new force_basic_auth: true
-      @http.receive_timeout = 10
-      @http.send_timeout = 10
+      @http.receive_timeout = 2
+      @http.send_timeout = 2
       @opts = opts
 
       unless opts[:api_key] || (opts[:sitename] && opts[:password])
@@ -53,7 +53,15 @@ module Neocities
 
       rpath = (remote_path || path.basename)
 
-      res = upload_hash rpath, Digest::SHA1.file(path.to_s).hexdigest
+
+      retries = 0
+      begin
+        res = upload_hash rpath, Digest::SHA1.file(path.to_s).hexdigest
+      rescue error
+        raise error if retries > 3
+        retries += 1
+        retry
+      end
 
       if res[:files] && res[:files][remote_path.to_s.to_sym] == true
         return {result: 'error', error_type: 'file_exists', message: 'file already exists and matches local file, not uploading'}
