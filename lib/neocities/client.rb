@@ -56,7 +56,7 @@ module Neocities
 
       retries = 0
       begin
-        sleep(2)
+        sleep(0.2)
         res = upload_hash rpath, Digest::SHA1.file(path.to_s).hexdigest
       rescue => error
         raise error if retries > 3
